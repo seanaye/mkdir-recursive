@@ -6,7 +6,7 @@ Given a path to an existing or non-existing file or directory, ensure that the l
 # Usage
 
 ```ts
-import { ensureDirExists, exists } from "https://deno.land/x/mkdir_recursive"
+import { ensureDirExists, exists } from "https://deno.land/x/mkdir_recursive/mod.ts"
 
 const stringExample = "/new/path/on/disk"
 
