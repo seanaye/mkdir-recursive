@@ -1,5 +1,10 @@
 const pathSeparator = "/";
 
+/**
+ * Returns true if file or dir is found
+ * @param filename - path to search for on disk
+ * @returns - Promise which resolves to the boolean whether the location exists
+ */
 export async function exists(filename: string | URL): Promise<boolean> {
   try {
     await Deno.stat(filename);
@@ -23,7 +28,7 @@ export async function exists(filename: string | URL): Promise<boolean> {
  * Will not create files, only directories
  * @param url - a valid url to an existing or non existing file or dir
  */
-export async function recursiveCreate(url: URL) {
+export async function ensureDirExists(url: URL) {
   const segments = url
     .pathname
     .split(pathSeparator)
@@ -38,10 +43,10 @@ export async function recursiveCreate(url: URL) {
     return
   }
 
-  // handle race condition where multiple created at once
   try {
     await Deno.mkdir(next, { recursive: true });
   } catch (e) {
+    // handle race condition where multiple created at once
     if (!(e instanceof Deno.errors.AlreadyExists)) {
       throw e;
     }
