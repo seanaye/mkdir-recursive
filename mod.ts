@@ -17,32 +17,33 @@ export async function exists(filename: string | URL): Promise<boolean> {
 }
 
 /**
- * Utility for recursively creating a given directory
- * Does not perform any destructive actions on the fs
+ * Utility for recursively creating a given directory.
+ * Given any valid URL it will create the leaf directory but not the trailing file.
+ * Does not perform any destructive actions on the fs.
  * Will not create files, only directories
- * @param start - a valid, already existing, path on disk
- * @param end - a valid path which contains start
- * @returns the URL of the last directory which was created
+ * @param url - a valid url to an existing or non existing file or dir
  */
-export async function recursiveCreate(start: URL, end: URL): Promise<URL> {
-  const diff = end.toString().replace(start.toString(), "");
-  const segments = diff
+export async function recursiveCreate(url: URL) {
+  const segments = url
+    .pathname
     .split(pathSeparator)
     .filter((s) => s && !s.includes("."));
 
-  const nextSegment = segments.at(0);
+  const leafDir = segments.join(pathSeparator);
 
-  // recursive end case
-  if (!nextSegment) {
-    return start;
-  }
-
-  const next = new URL(`${pathSeparator}${nextSegment}`, start);
+  const next = new URL(leafDir + pathSeparator, "file://");
 
   // create the next dir if it doesn't exist
-  if (!(await exists(next))) {
-    await Deno.mkdir(next);
+  if (await exists(next)) {
+    return
   }
 
-  return await recursiveCreate(next, end);
+  // handle race condition where multiple created at once
+  try {
+    await Deno.mkdir(next, { recursive: true });
+  } catch (e) {
+    if (!(e instanceof Deno.errors.AlreadyExists)) {
+      throw e;
+    }
+  }
 }
